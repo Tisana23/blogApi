@@ -5,9 +5,9 @@ RSpec.describe 'Posts', type: :request do
   describe 'GET /posts' do
     
     context 'without data in the DB' do
-      before {get '/posts'}
-
+      
       it 'should return empty' do
+        get '/posts'
         payload = JSON.parse(response.body)
         expect(payload).to be_empty
         expect(response).to have_http_status(200)
@@ -25,6 +25,22 @@ RSpec.describe 'Posts', type: :request do
         expect(response).to have_http_status(200)
       end
     end
+
+    describe 'Search' do
+      let!(:hola_mundo) {create(:post, published: true, title: 'Hola Mundo')}
+      let!(:hola_rails) {create(:post, published: true, title: 'Hola Rails')}
+      let!(:curso_rails) {create(:post, published: true, title: 'Curso Rails')}
+
+      it 'should filter posts by title' do
+        get '/posts?search=Hola'
+        payload = JSON.parse(response.body)
+        expect(payload).to_not be_empty
+        expect(payload.size).to eq(2)
+        expect(payload.map {|p| p['id']}.sort).to eq([hola_mundo.id, hola_rails.id].sort)
+        expect(response).to have_http_status(200)
+      end
+    end
+
   end
 
   describe 'GET posts/post' do
